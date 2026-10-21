@@ -21,6 +21,7 @@ export enum TokenType {
   FALSE,
   RETURN,
   FN,
+  STRING,
   EOF,
 }
 

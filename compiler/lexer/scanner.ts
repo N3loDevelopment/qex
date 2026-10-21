@@ -85,6 +85,21 @@ export class Scanner {
     this.addToken(type, this.getCurrentChar(), this.line);
   }
 
+  string(): void {
+    while (this.peek() != '"' && !this.isAtEnd()) {
+      if (this.peek() == "\n") this.line++;
+      this.advance();
+    }
+
+    this.advance();
+
+    let startString: number = this.start + 1;
+    let endString: number = this.current - 1;
+
+    let string: string = this.source.substring(startString, endString);
+    this.addToken(TokenType.STRING, string, this.line);
+  }
+
   scanToken(): void {
     let char = this.advance();
 
@@ -145,6 +160,9 @@ export class Scanner {
           this.getCurrentChar(),
           this.line,
         );
+        break;
+      case '"':
+        this.string();
         break;
 
       default:
