@@ -1,6 +1,8 @@
 export enum TokenType {
   IDENTIFIER,
+
   COLON,
+
   EQUALS,
   PLUS,
   PLUS_EQUALS,
@@ -15,6 +17,10 @@ export enum TokenType {
   BANG,
   BANG_EQUALS,
   NUMBER,
+
+  InvalidString,
+  InvalidChar,
+
   IF,
   ELSE,
   TRUE,
@@ -22,6 +28,7 @@ export enum TokenType {
   RETURN,
   FN,
   STRING,
+
   EOF,
 }
 

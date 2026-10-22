@@ -6,6 +6,7 @@ export class Scanner {
   start: number = 0;
   current: number = 0;
   line: number = 1;
+  error: boolean = false;
 
   constructor(source: string) {
     this.source = source;
@@ -54,6 +55,11 @@ export class Scanner {
     this.tokens.push(new Token(type, lexeme, line));
   }
 
+  createError(type: TokenType, line: number): void {
+    this.addToken(type, "", line);
+    this.error = true;
+  }
+
   isDigit(c: string): boolean {
     return c >= "0" && c <= "9";
   }
@@ -81,7 +87,6 @@ export class Scanner {
 
     let ident: string = this.source.substring(this.start, this.current);
     let type: TokenType = Scanner.keywords.get(ident) ?? TokenType.IDENTIFIER;
-    if (type != null) type = TokenType.IDENTIFIER;
     this.addToken(type, this.getCurrentChar(), this.line);
   }
 
@@ -91,6 +96,11 @@ export class Scanner {
       this.advance();
     }
 
+    if (this.isAtEnd()) {
+      this.createError(TokenType.InvalidString, this.line);
+      return;
+    }
+
     this.advance();
 
     let startString: number = this.start + 1;
@@ -98,6 +108,10 @@ export class Scanner {
 
     let string: string = this.source.substring(startString, endString);
     this.addToken(TokenType.STRING, string, this.line);
+  }
+
+  invalidChar(): void {
+    this.createError(TokenType.InvalidChar, this.line);
   }
 
   scanToken(): void {
@@ -170,12 +184,14 @@ export class Scanner {
           this.number();
         } else if (this.isAlpha(char)) {
           this.identifier();
+        } else {
+          this.invalidChar();
         }
     }
   }
 
   scanTokens(): Token[] {
-    while (!this.isAtEnd()) {
+    while (!this.isAtEnd() && !this.error) {
       this.start = this.current;
       this.scanToken();
     }
