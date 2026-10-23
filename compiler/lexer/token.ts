@@ -20,6 +20,13 @@ export enum TokenType {
 
   InvalidString,
   InvalidChar,
+  InvalidIdentifier,
+  PointerError,
+
+  Lower,
+  Bigger,
+  LowerEquals,
+  BiggerEquals,
 
   IF,
   ELSE,
@@ -28,6 +35,19 @@ export enum TokenType {
   RETURN,
   FN,
   STRING,
+
+  LParen,
+  RParen,
+  LBrace,
+  RBrace,
+  LBracket,
+  RBracket,
+
+  Semi,
+  Comma,
+  Colon,
+  Dot,
+  TripleDot,
 
   EOF,
 }

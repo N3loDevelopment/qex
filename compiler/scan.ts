@@ -10,6 +10,6 @@ const tokens = scanner.scanTokens();
 
 setTimeout(() => {
   for (const token of tokens) {
-    console.log(token.toString());
+    console.log(token.toString(), token.line);
   }
 }, 500);

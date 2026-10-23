@@ -21,7 +21,7 @@ export class Scanner {
     ["false", TokenType.FALSE],
   ]);
 
-  match(expected: string): boolean {
+  private match(expected: string): boolean {
     if (this.isAtEnd()) return false;
     if (this.peek() != expected) return false;
 
@@ -29,60 +29,60 @@ export class Scanner {
     return true;
   }
 
-  peek(): string {
+  private peek(): string {
     return this.source.charAt(this.current);
   }
 
-  peekNext(): string {
+  private peekNext(): string {
     let next = this.current + 1;
     if (next < this.source.length) return this.source.charAt(next);
     return "";
   }
 
-  isAtEnd(): boolean {
+  private isAtEnd(): boolean {
     return this.current >= this.source.length;
   }
 
-  advance(): string {
+  private advance(): string {
     return this.source.charAt(this.current++);
   }
 
-  getCurrentChar(): string {
+  private getCurrentChar(): string {
     return this.source.slice(this.start, this.current);
   }
 
-  addToken(type: TokenType, lexeme: string, line: number): void {
+  private addToken(type: TokenType, lexeme: string, line: number): void {
     this.tokens.push(new Token(type, lexeme, line));
   }
 
-  createError(type: TokenType, line: number): void {
+  public createError(type: TokenType, line: number): void {
     this.addToken(type, "", line);
     this.error = true;
   }
 
-  isDigit(c: string): boolean {
+  private isDigit(c: string): boolean {
     return c >= "0" && c <= "9";
   }
 
-  isAlpha(c: string): boolean {
+  private isAlpha(c: string): boolean {
     return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c == "_";
   }
 
-  isAlphaNumeric(c: string): boolean {
+  private isAlphaNumeric(c: string): boolean {
     return this.isAlpha(c) || this.isDigit(c);
   }
 
-  number(): void {
-    while (
-      this.isDigit(this.peek()) ||
-      (this.peek() == "." && this.isDigit(this.peekNext()))
-    ) {
-      this.advance();
+  private number(): void {
+    while (this.isDigit(this.peek()) || (this.peek() == "." && this.isDigit(this.peekNext()))) this.advance();
+
+    if (this.isAlpha(this.peek())) {
+      this.createError(TokenType.InvalidIdentifier, this.line);
+      return;
     }
     this.addToken(TokenType.NUMBER, this.getCurrentChar(), this.line);
   }
 
-  identifier(): void {
+  private identifier(): void {
     while (this.isAlphaNumeric(this.peek())) this.advance();
 
     let ident: string = this.source.substring(this.start, this.current);
@@ -90,7 +90,7 @@ export class Scanner {
     this.addToken(type, this.getCurrentChar(), this.line);
   }
 
-  string(): void {
+  private string(): void {
     while (this.peek() != '"' && !this.isAtEnd()) {
       if (this.peek() == "\n") this.line++;
       this.advance();
@@ -110,87 +110,155 @@ export class Scanner {
     this.addToken(TokenType.STRING, string, this.line);
   }
 
-  invalidChar(): void {
+  private invalidChar(): void {
     this.createError(TokenType.InvalidChar, this.line);
   }
 
-  scanToken(): void {
+  private scanToken(): void {
     let char = this.advance();
 
-    switch (char) {
-      //Whitespaces
-      case " ":
-        break;
-      case "\t":
-        break;
-      case "\r":
-        break;
-
-      case "\n":
-        this.line++;
-        break;
-
-      //BinaryOperator
-      case "+":
-        this.addToken(
-          this.match("=") ? TokenType.PLUS_EQUALS : TokenType.PLUS,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-      case "-":
-        this.addToken(
-          this.match("=") ? TokenType.MINUS_EQUALS : TokenType.MINUS,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-      case "*":
-        this.addToken(
-          this.match("=") ? TokenType.MULTIPLIES_EQUALS : TokenType.MULTIPLIES,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-      case "/":
-        this.addToken(
-          this.match("=") ? TokenType.DEVIDED_EQUALS : TokenType.DEVIDED,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-
-      //AssignmentOperator
-      case "=":
-        this.addToken(
-          this.match("=") ? TokenType.EQUALS_EQUALS : TokenType.EQUALS,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-      case "!":
-        this.addToken(
-          this.match("=") ? TokenType.BANG_EQUALS : TokenType.BANG,
-          this.getCurrentChar(),
-          this.line,
-        );
-        break;
-      case '"':
-        this.string();
-        break;
-
-      default:
-        if (this.isDigit(char)) {
-          this.number();
-        } else if (this.isAlpha(char)) {
-          this.identifier();
-        } else {
-          this.invalidChar();
-        }
+    // Whitespaces
+    if (char === " " || char === "\t" || char === "\r") {
+      return;
     }
+
+    if (char === "\n") {
+      this.line++;
+      return;
+    }
+
+    // BinaryOperator
+    if (char === "+") {
+      this.addToken(this.match("=") ? TokenType.PLUS_EQUALS : TokenType.PLUS, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "-") {
+      this.addToken(this.match("=") ? TokenType.MINUS_EQUALS : TokenType.MINUS, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "*") {
+      this.addToken(
+        this.match("=") ? TokenType.MULTIPLIES_EQUALS : TokenType.MULTIPLIES,
+        this.getCurrentChar(),
+        this.line,
+      );
+      return;
+    }
+
+    if (char === "/") {
+      this.addToken(this.match("=") ? TokenType.DEVIDED_EQUALS : TokenType.DEVIDED, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    //CompareOperator
+    if (char === "<") {
+      this.addToken(this.match("=") ? TokenType.LowerEquals : TokenType.Lower, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ">") {
+      this.addToken(this.match("=") ? TokenType.BiggerEquals : TokenType.Bigger, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    //Brackets
+    if (char === "(") {
+      this.addToken(TokenType.LParen, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ")") {
+      this.addToken(TokenType.RParen, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "{") {
+      this.addToken(TokenType.LBrace, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "}") {
+      this.addToken(TokenType.RBrace, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "[") {
+      this.addToken(TokenType.LBracket, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "]") {
+      this.addToken(TokenType.RBracket, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ";") {
+      this.addToken(TokenType.Semi, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ",") {
+      this.addToken(TokenType.Comma, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ":") {
+      this.addToken(TokenType.Colon, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === ".") {
+      let dotCounter: number = 1;
+      while (this.peek() === ".") {
+        this.advance();
+        dotCounter++;
+      }
+      if (dotCounter === 1) {
+        this.addToken(TokenType.Dot, this.getCurrentChar(), this.line);
+      } else if (dotCounter === 3) {
+        this.addToken(TokenType.TripleDot, this.getCurrentChar(), this.line);
+      } else {
+        this.createError(TokenType.PointerError, this.line);
+        this.error = true;
+      }
+      return;
+    }
+
+    // AssignmentOperator
+    if (char === "=") {
+      this.addToken(this.match("=") ? TokenType.EQUALS_EQUALS : TokenType.EQUALS, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    if (char === "!") {
+      this.addToken(this.match("=") ? TokenType.BANG_EQUALS : TokenType.BANG, this.getCurrentChar(), this.line);
+      return;
+    }
+
+    // String
+    if (char === '"') {
+      this.string();
+      return;
+    }
+
+    // Numbers and identifiers
+    if (this.isDigit(char)) {
+      this.number();
+      return;
+    }
+
+    if (this.isAlpha(char)) {
+      this.identifier();
+      return;
+    }
+
+    // Invalid character
+    this.invalidChar();
   }
 
-  scanTokens(): Token[] {
+  public scanTokens(): Token[] {
     while (!this.isAtEnd() && !this.error) {
       this.start = this.current;
       this.scanToken();
