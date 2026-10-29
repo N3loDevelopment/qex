@@ -60,8 +60,6 @@ export class Parser {
 
   parseExpression(): Expr {
     let currentToken: Token = this.peekToken();
-
-    let currentToken: Token = this.peekToken();
     this.consume(currentToken.type);
     if (currentToken.type === TokenType.NUMBER) {
       if (this.peekToken().type === TokenType.PLUS) {
