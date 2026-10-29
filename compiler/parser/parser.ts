@@ -60,13 +60,28 @@ export class Parser {
 
   parseExpression(): Expr {
     let currentToken: Token = this.peekToken();
-    this.consume(currentToken.type);
-    if (currentToken.type === TokenType.NUMBER) {
-      if (this.peekToken().type === TokenType.PLUS) {
-        let nextToken = this.peekToken();
-        return new BinaryExpr(new LiteralExpr(currentToken), nextToken, new LiteralExpr(this.peekNext()));
-      }
+
+    if (currentToken.type !== TokenType.NUMBER) {
+      return this.errorHandler(ParserError.TokenTypeMismatch, TokenType.NUMBER, currentToken.lexeme);
     }
-    return this.errorHandler(ParserError.TokenTypeMismatch, currentToken.type, currentToken.lexeme);
+
+    this.consume(TokenType.NUMBER);
+    let expression: Expr = new LiteralExpr(currentToken);
+
+    while (this.peekToken().type === TokenType.PLUS) {
+      const operator: Token = this.consume(TokenType.PLUS);
+
+      currentToken = this.peekToken();
+
+      if (currentToken.type !== TokenType.NUMBER) {
+        return this.errorHandler(ParserError.TokenTypeMismatch, TokenType.NUMBER, currentToken.lexeme);
+      }
+
+      this.consume(TokenType.NUMBER);
+      const right: Expr = new LiteralExpr(currentToken);
+      expression = new BinaryExpr(expression, operator, right);
+    }
+
+    return expression;
   }
 }
