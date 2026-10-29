@@ -1,8 +1,9 @@
 import { Token, TokenType } from "../lexer/token.ts";
-import { Expr, LiteralExpr } from "./ast.ts";
+import { BinaryExpr, Expr, LiteralExpr } from "./ast.ts";
 
 enum ParserError {
   TokenTypeMismatch,
+  UnknowError,
 }
 
 export class Parser {
@@ -60,10 +61,14 @@ export class Parser {
   parseExpression(): Expr {
     let currentToken: Token = this.peekToken();
 
-    if (this.compareToken(TokenType.NUMBER)) {
-      this.consume(TokenType.NUMBER);
-      return new LiteralExpr(currentToken);
+    let currentToken: Token = this.peekToken();
+    this.consume(currentToken.type);
+    if (currentToken.type === TokenType.NUMBER) {
+      if (this.peekToken().type === TokenType.PLUS) {
+        let nextToken = this.peekToken();
+        return new BinaryExpr(new LiteralExpr(currentToken), nextToken, new LiteralExpr(this.peekNext()));
+      }
     }
-    return this.errorHandler(ParserError.TokenTypeMismatch, TokenType.NUMBER, currentToken.lexeme);
+    return this.errorHandler(ParserError.TokenTypeMismatch, currentToken.type, currentToken.lexeme);
   }
 }
